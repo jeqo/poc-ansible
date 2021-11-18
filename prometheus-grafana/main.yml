@@ -1,0 +1,30 @@
+- name: Provisioning Prometheus
+  hosts: localhost
+  tasks:
+    - include_role:
+        name: cloudalchemy.prometheus
+- name: Provisioning Grafana
+  hosts: localhost
+  become: true
+  vars:
+    grafana_security:
+      admin_user: admin
+      admin_password: password
+    grafana_datasources:
+      - name: prometheus
+        type: prometheus
+        access: proxy
+        url: 'http://localhost:9090'
+        basicAuth: false
+  tasks:
+    - copy:
+        src: ./files/grafana-enterprise_8.2.4_amd64.deb
+        dest: /tmp/grafana-enterprise_8.2.4_amd64.deb
+    - apt:
+        deb: /tmp/grafana-enterprise_8.2.4_amd64.deb
+        state: present
+    - include_role:
+        name: cloudalchemy.grafana
+      vars:
+        grafana_package: grafana-enterprise
+        grafana_manage_repo: false
